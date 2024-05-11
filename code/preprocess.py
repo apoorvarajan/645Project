@@ -33,10 +33,8 @@ conn = db.connect()
   
 # # conn.commit() 
 # conn.close() 
-
-import pandas as pd
 headers = ["age", "workclass", "fnlwgt", "education", "education_num", "marital_status",
-           "occupation", "relationship", "race", "sex", "capital_gain", "capital_loss integer", 
+           "occupation", "relationship", "race", "sex", "capital_gain", "capital_loss", 
            "hours_per_week", "native_country", "income"]
 train = pd.read_csv("../data/train.csv", header=0, names = headers, na_values=" ?")
 test = pd.read_csv("../data/test.csv", header=0, names = headers, na_values=" ?")
@@ -57,10 +55,14 @@ traintest.to_sql("total_adults", con=conn, if_exists='replace', index=False)
 conn = psycopg2.connect(conn_string) 
 conn.autocommit = True
 cursor = conn.cursor() 
+sql_drop_unmarried ='''drop table if exists unmarried_adults;'''
+sql_drop_married = '''drop table if exists married_adults;'''
 sql1 = '''create table unmarried_adults as select * from total_adults where marital_status ='Unmarried';'''
 sql2 = '''create table married_adults as select * from total_adults where marital_status ='Married';'''
 sql3 = '''alter table unmarried_adults drop marital_status;'''
 sql4 = '''alter table married_adults drop marital_status;'''
+cursor.execute(sql_drop_unmarried)
+cursor.execute(sql_drop_married)
 cursor.execute(sql1)
 cursor.execute(sql2)
 cursor.execute(sql3)
