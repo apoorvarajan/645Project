@@ -53,13 +53,18 @@ train.to_sql('adults', con=conn, if_exists='replace', index=False)
 traintest.to_sql("total_adults", con=conn, if_exists='replace', index=False)
 # traintest.to_csv("../data/adults_total.csv", index=False)
 # train.to_csv("../data/preprocessed_train.csv", index=False)
+#married_df = df = pd.read_sql_query("select * from all_adults where marital_status ='Married'",con=conn)
 conn = psycopg2.connect(conn_string) 
 conn.autocommit = True
 cursor = conn.cursor() 
-sql1 = '''select * from adults limit 1;'''
-sql2 = '''select * from total_adults limit 5;'''
+sql1 = '''create table unmarried_adults as select * from total_adults where marital_status ='Unmarried';'''
+sql2 = '''create table married_adults as select * from total_adults where marital_status ='Married';'''
+sql3 = '''alter table unmarried_adults drop marital_status;'''
+sql4 = '''alter table married_adults drop marital_status;'''
 cursor.execute(sql1)
 cursor.execute(sql2)
-for i in cursor.fetchall(): 
-    print(i) 
+cursor.execute(sql3)
+cursor.execute(sql4)
+# for i in cursor.fetchall(): 
+#     print(i) 
 conn.close()
