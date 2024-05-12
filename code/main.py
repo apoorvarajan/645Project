@@ -74,12 +74,12 @@ cols_married = cursor.description
 cursor.execute(unmarried_combine_query)
 res_unmarried = pd.DataFrame(cursor.fetchall())
 cols_unmarried = cursor.description
-print(cols_unmarried)
+# print(cols_unmarried)
 
 res_married.columns = [col[0] for col in cols_married]
 res_unmarried.columns = [col[0] for col in cols_unmarried]
 
-print(res_unmarried)
+# print(res_unmarried)
 
 visualization = []
 for f in aggregates:
@@ -91,25 +91,72 @@ for f in aggregates:
 
 dict_kl=defaultdict(list)
 for a,m,f in visualization:
+    attributes_married = defaultdict(list)
     for val in res_married[a].unique():
-        print(val)
-        print(res_married[res_married[a] == val])
-        print(f,m)
+        # print(val)
+        # print(res_married[res_married[a] == val])
+        # print(f,m)
         all_values=list(res_married[res_married[a] == val]["{}_{}".format(f,m)]) 
         #print(val_list)
         if f=='sum':
-            sum(all_values)
+            attributes_married[val]=sum(all_values)
         elif f=='max':
-            max(all_values)
+            attributes_married[val]=max(all_values)
         elif f=='min':
-            min(all_values)
+            attributes_married[val]=min(all_values)
         elif f=='count':
-            sum(all_values)
+            attributes_married[val]=sum(all_values)
         elif f=='avg':
-           print() 
-           #todo
-        break
-    break
+            get_counts = list(res_married[res_married[a] == val]["count_{}".format(m)])
+            s=0
+            t=0
+            for i,j in zip(all_values, get_counts):
+                s += i*j
+                t += j
+            if t>0:
+                attributes_married[val]=s/t
+            else:
+                attributes_married[val]=Decimal(1e-10)
+    attributes_unmarried = defaultdict(list)
+    for val in res_unmarried[a].unique():
+        # print(val)
+        # print(res_married[res_married[a] == val])
+        # print(f,m)
+        all_values=list(res_unmarried[res_unmarried[a] == val]["{}_{}".format(f,m)]) 
+        #print(val_list)
+        if f=='sum':
+            attributes_unmarried[val]=sum(all_values)
+        elif f=='max':
+            attributes_unmarried[val]=max(all_values)
+        elif f=='min':
+            attributes_unmarried[val]=min(all_values)
+        elif f=='count':
+            attributes_unmarried[val]=sum(all_values)
+        elif f=='avg':
+            get_counts = list(res_unmarried[res_unmarried[a] == val]["count_{}".format(m)])
+            s=0
+            t=0
+            for i,j in zip(all_values, get_counts):
+                s += i*j
+                t += j
+            if t>0:
+                attributes_unmarried[val]=s/t
+            else:
+                attributes_unmarried[val]=Decimal(1e-10)
+    dict_result = defaultdict(list)
+    # print(attributes_married)
+    for key,value in attributes_married.items():
+        dict_result[key].append(value) if value!=0 else dict_result[key].append(Decimal(1e-10))
+    for key,value in attributes_unmarried.items():
+        if key not in dict_result:
+            dict_result[key].append(Decimal(1e-10))
+        dict_result[key].append(value) if value!=0 else dict_result[key].append(Decimal(1e-10))
+    for key, value in dict_result.items():
+        if len(value)!=2:
+            dict_result[key].append(Decimal(1e-10))
+    print(dict_result)
+    # for key,value in res_unmarried:
+    #     dict_result[key].append(value) if value!=0 else dict_result[key].append(Decimal(1e-10))
 
 
 
