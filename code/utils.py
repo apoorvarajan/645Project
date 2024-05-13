@@ -2,12 +2,19 @@ from itertools import product
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import stats
+import psycopg2
+import pandas as pd
 
+conn_string='postgresql://priyankavirupakshappadevoor@localhost/priyankavirupakshappadevoor'
+conn = psycopg2.connect(conn_string) 
+cursor = conn.cursor() 
+
+measure_attr=['age','fnlwgt', 'education_num','capital_gain','capital_loss','hours_per_week']
+dimension_attr=['workclass','education','occupation','relationship','race','sex','native_country','income']
+aggregates=['sum','avg','max','min','count']
 
 def get_prune_query(start_index_target,end_index_target, start_index_ref,end_index_ref):
-    measure_attr=['age','fnlwgt', 'education_num','capital_gain','capital_loss','hours_per_week']
-    dimension_attr=['workclass','education','occupation','relationship','race','sex','native_country','income']
-    aggregates=['sum','avg','max','min','count']
     rows_target = """
     WITH RankedRowsm AS (
         SELECT *,
@@ -47,26 +54,81 @@ def get_confidence_interval(m,N,delta):
 
 def KL_divergence(target, reference):
     #Compute dsitance between probability distributions of target and reference
+
     target = np.asarray(target, dtype=np.float64)
     reference = np.asarray(reference, dtype=np.float64)
-    print("length of target and ref",len(target),len(reference))
-    if len(target) > len(reference):
-        target = np.random.choice(target, len(reference))
-    elif len(reference) >= len(target):
-        reference = np.random.choice(reference, len(target))
-    return np.sum(target * np.log(target / reference))
-
+    p = target/np.sum(target)
+    q = reference/np.sum(reference)
+    replace = 0.00008
+    p[p == 0] = replace
+    q[q == 0] = replace
+    # This will be our utility measure.
+    if len(p)==len(q):
+        # This module automatically normalizes the arrays sent to it
+        return stats.entropy(p,q)
+    else:
+        # since in our specification we are grouping on married and unmarried in partitions
+        # which might not have same number of groups
+        if len(p) > len(q):
+            p = np.random.choice(p, len(q))
+        elif len(q) > len(p):
+            q = np.random.choice(q, len(p))
+        return np.sum(p * np.log(p / q)) 
+   
     
-def get_all_views(measure_attr,dimension_attr,aggregates):
+def get_all_views():
     #Computes all the possible combination views based on measure, dimension and aggregate values
-    views = []
-    for a in dimension_attr:
-        for m in measure_attr:
-            for f in aggregates:
-                views.append((a,f,m))
+    views = {k: v for k,v in enumerate(list(product(aggregates,measure_attr,dimension_attr)))}
     return views
 
+def execute_query(query):
+    cursor.execute(query)
+    result= pd.DataFrame(cursor.fetchall())
+    target_cols = cursor.description
+    result.columns = [col[0] for col in target_cols]
+    return result
 
+def EvaluationViews(views, view_scores, target_df, reference_df):
+    for i, view in views.items():
+        f,m,a = view
+        vName='{}_{}'.format(f,m)
+        married = target_df.loc[target_df[a].notnull(), [a,vName]]
+        unmarried = reference_df.loc[reference_df[a].notnull(), [a, vName]]
+        temp = married.join(unmarried.set_index(a), on=a, how="inner", lsuffix='_target', rsuffix='_reference')
+        #print("Temp:",temp)
+        TarValues = temp[vName+'_target'.format(i)].values
+        RefValues = temp[vName+'_reference'.format(i)].values
+        #print("TarValues:", TarValues)
+        UtiltiScore = KL_divergence(TarValues, RefValues)
+        #print("UtiltiScore:", UtiltiScore)
+        view_scores[i].append(UtiltiScore)
+
+    return view_scores
+
+def top_5_AggViews(ranking,views):
+    for vid in ranking[:5]:        
+        f, m, a = views[vid]
+
+        query = "SELECT {}, {}({}) FROM married_adults GROUP BY {};".format(a, f, m, a)
+        cursor.execute(query)
+        tgt_rows = cursor.fetchall()
+
+        query = "SELECT {}, {}({}) FROM unmarried_adults GROUP BY {};".format(a, f, m, a)
+        cursor.execute(query)
+        ref_rows = cursor.fetchall()
+
+        tgt_dict = dict(tgt_rows)
+        ref_dict = dict(ref_rows)
+
+        for k in tgt_dict.keys():
+            if k not in ref_dict:
+                ref_dict[k] = 0
+
+        for k in ref_dict.keys():
+            if k not in tgt_dict:
+                tgt_dict[k] = 0
+
+        display_Graph(tgt_dict, ref_dict, (a, m, f))
 
 #need to modify code
 def display_Graph(target_data, ref_data, view_tuple):
