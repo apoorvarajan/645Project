@@ -62,18 +62,11 @@ def KL_divergence(target, reference):
     replace = 0.00008
     p[p == 0] = replace
     q[q == 0] = replace
-    # This will be our utility measure.
-    if len(p)==len(q):
-        # This module automatically normalizes the arrays sent to it
-        return stats.entropy(p,q)
-    else:
-        # since in our specification we are grouping on married and unmarried in partitions
-        # which might not have same number of groups
-        if len(p) > len(q):
-            p = np.random.choice(p, len(q))
-        elif len(q) > len(p):
-            q = np.random.choice(q, len(p))
-        return np.sum(p * np.log(p / q)) 
+    if len(p) > len(q):
+        p = np.random.choice(p, len(q))
+    elif len(q) >= len(p):
+        q = np.random.choice(q, len(p))
+    return np.sum(p * np.log(p / q)) 
    
     
 def get_all_views():

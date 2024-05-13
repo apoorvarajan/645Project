@@ -15,7 +15,6 @@ partition_size_married = total_married_records // N
 partition_size_unmarried = total_unmarried_records // N
 
 views = utils.get_all_views()
-print(views)
 view_scores = {k: [] for k, v in views.items()}
 result_views = {k: v for k, v in views.items()}
 
@@ -34,7 +33,6 @@ for i in range(N):
     reference_result = utils.execute_query(reference_query)
 
     view_scores = utils.EvaluationViews(views, view_scores, target_result, reference_result)
-    print(view_scores)
     if i > 0:
         m = i+1 
         epsilon = utils.get_confidence_interval(m,N,delta)
