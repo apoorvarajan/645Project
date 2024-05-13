@@ -1,6 +1,8 @@
 from itertools import product
 import math
 import numpy as np
+import matplotlib.pyplot as plt
+
 
 def get_prune_query(start_index_target,end_index_target, start_index_ref,end_index_ref):
     measure_attr=['age','fnlwgt', 'education_num','capital_gain','capital_loss','hours_per_week']
@@ -47,6 +49,7 @@ def KL_divergence(target, reference):
     #Compute dsitance between probability distributions of target and reference
     target = np.asarray(target, dtype=np.float64)
     reference = np.asarray(reference, dtype=np.float64)
+    print("length of target and ref",len(target),len(reference))
     if len(target) > len(reference):
         target = np.random.choice(target, len(reference))
     elif len(reference) >= len(target):
@@ -63,3 +66,36 @@ def get_all_views(measure_attr,dimension_attr,aggregates):
                 views.append((a,f,m))
     return views
 
+
+
+#need to modify code
+def display_Graph(target_data, ref_data, view_tuple):
+    n_groups = len(target_data)
+    group_by, measure, function = view_tuple
+
+    means_target = target_data.values()
+    means_ref = ref_data.values()
+
+    # create plot
+    fig, ax = plt.subplots()
+    index = np.arange(n_groups)
+    bar_width = 0.35
+    opacity = 0.8
+
+    rects1 = plt.bar(index, means_target, bar_width,
+                     alpha=opacity,
+                     color='b',
+                     label='married')
+
+    rects2 = plt.bar(index + bar_width, means_ref, bar_width,
+                     alpha=opacity,
+                     color='g',
+                     label='unmarried')
+
+    plt.xlabel('{}'.format(group_by))
+    plt.ylabel('{}({})'.format(function, measure))
+    plt.xticks(index + bar_width, target_data.keys(), rotation=45)
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
