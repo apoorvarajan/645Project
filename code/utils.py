@@ -139,12 +139,12 @@ def display_Graph(target_data, ref_data, view_tuple):
 
     rects1 = plt.bar(index, means_target, bar_width,
                      alpha=opacity,
-                     color='b',
+                     color='#800080',
                      label='married')
 
     rects2 = plt.bar(index + bar_width, means_ref, bar_width,
                      alpha=opacity,
-                     color='g',
+                     color='#FFB6C1',
                      label='unmarried')
 
     plt.xlabel('{}'.format(group_by))

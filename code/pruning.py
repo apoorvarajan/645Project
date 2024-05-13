@@ -2,8 +2,11 @@ import psycopg2
 import numpy as np
 import pandas as pd
 import utils
+import time
 
-N = 5 #Number of phases
+start_time = time.time()
+
+N = 10 #Number of phases
 delta = 0.05
 top = 5
 
@@ -46,3 +49,5 @@ for i in range(N):
             
 print('Total number of pruned views: {}.'.format(len(views)-len(result_views)))
 utils.top_5_AggViews([r[0] for r in views_ranking] ,views)
+elapsed_time = time.time() - start_time
+print(elapsed_time)
