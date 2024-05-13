@@ -49,7 +49,7 @@ def KL_divergence(target, reference):
     reference = np.asarray(reference, dtype=np.float64)
     if len(target) > len(reference):
         target = np.random.choice(target, len(reference))
-    elif len(q) >= len(target):
+    elif len(reference) >= len(target):
         reference = np.random.choice(reference, len(target))
     return np.sum(target * np.log(target / reference))
 
