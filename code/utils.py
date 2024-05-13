@@ -75,6 +75,9 @@ def get_all_views():
     return views
 
 def execute_query(query):
+    conn_string='postgresql://priyankavirupakshappadevoor@localhost/priyankavirupakshappadevoor'
+    conn = psycopg2.connect(conn_string) 
+    cursor = conn.cursor() 
     cursor.execute(query)
     result= pd.DataFrame(cursor.fetchall())
     target_cols = cursor.description
@@ -138,13 +141,13 @@ def display_Graph(target_data, ref_data, view_tuple):
 
     plt.bar(index, means_target, bar_width,
                      alpha=opacity,
-                     color='r',
-                     label='True')
+                     color='#800080',
+                     label='married')
 
     plt.bar(index + bar_width, means_ref, bar_width,
                      alpha=opacity,
-                     color='g',
-                     label='False')
+                     color='#FFB6C1',
+                     label='unmarried')
 
     plt.xlabel('{}'.format(group_by))
     plt.ylabel('{}({})'.format(function, measure))
