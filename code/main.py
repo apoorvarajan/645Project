@@ -3,7 +3,7 @@ import pandas as pd
 from sqlalchemy import create_engine 
 from collections import defaultdict
 from decimal import Decimal
-conn_string='postgresql://apoorvarajan@localhost/apoorvarajan'
+conn_string='postgresql://femimoljoseph@localhost/SeeDB_Project'
 # db = create_engine(conn_string)
 # conn = db.connect()
 conn = psycopg2.connect(conn_string) 
@@ -47,7 +47,7 @@ aggregates=['sum','avg','max','min','count']
 
 
 
-# Sharing Based
+# Sharing Based combining aggregates
 
 married_combine_query = 'select ' + ','.join(dimension_attr)
 aggregate_query_married = ''
@@ -65,8 +65,7 @@ unmarried_combine_query = 'select ' + ','.join(dimension_attr)
 unmarried_combine_query+=aggregate_query_married + ' from unmarried_adults where '
 unmarried_combine_query+=where_married + ' group by '+ ','.join(dimension_attr)+' ;'
 
-# print(married_combine_query)
-# print(unmarried_combine_query)
+
 
 cursor.execute(married_combine_query)
 res_married= pd.DataFrame(cursor.fetchall())
@@ -74,12 +73,12 @@ cols_married = cursor.description
 cursor.execute(unmarried_combine_query)
 res_unmarried = pd.DataFrame(cursor.fetchall())
 cols_unmarried = cursor.description
-print(cols_unmarried)
+#print(cols_unmarried)
 
 res_married.columns = [col[0] for col in cols_married]
 res_unmarried.columns = [col[0] for col in cols_unmarried]
 
-print(res_unmarried)
+
 
 visualization = []
 for f in aggregates:
@@ -87,18 +86,59 @@ for f in aggregates:
         for m in measure_attr:
             visualization.append((a,m,f))
 
+
+#Combining target and reference view query
+
+# g1 will be kept as 1 for all married adults and 0 for unmarried
+'''SELECT 
+    (a1, a2, ... an),
+    (f1_m1, f1_m2, ... f1_mn, ... f2_m1, f2_m2, ... fn_mn),
+    CASE 
+        WHEN marital_status = 'married' THEN 1 
+        ELSE 0 
+    END as g1
+FROM 
+    total_adults 
+GROUP BY 
+    a1, a2, ... an, g1
+'''
+
+def combiningTargetandReference():
+    combined_query = 'select ' + ','.join(dimension_attr)
+    combined_query+=aggregate_query + ", CASE  WHEN marital_status = 'Married' THEN 1 ELSE 0 END as g1 from total_adults where "
+    combined_query+=where_married + ' group by '+ ','.join(dimension_attr)+',g1 ;'
+    cursor.execute(combined_query)
+    res_TargetRef= pd.DataFrame(cursor.fetchall())
+    
+    cols_TargetRef= cursor.description
+    #print("cols_TargetRef:",cols_TargetRef)
+    return res_TargetRef,cols_TargetRef
+
+aggregate_query=''
+for f in aggregates:
+    for m in measure_attr:
+        aggregate_query+= (','+f+'('+m+') as '+f+'_'+m)
+
+data,cols = combiningTargetandReference()
+data.columns = [col[0] for col in cols]
+target_df = data[data['g1'] == 1].copy()  # Filter rows where g1 is 1 or married
+reference_df = data[data['g1'] == 0].copy() 
+print("target_df:",target_df)
+print("reference_df:",reference_df)
+
+
 #Evaluation - Sharing Based
 
 dict_kl=defaultdict(list)
 for a,m,f in visualization:
     for val in res_married[a].unique():
-        print(val)
-        print(res_married[res_married[a] == val])
-        print(f,m)
+        print("val :",val)
+        
+        print("f,m:",f,m)
         all_values=list(res_married[res_married[a] == val]["{}_{}".format(f,m)]) 
-        #print(val_list)
+        
         if f=='sum':
-            sum(all_values)
+            print("sum:",sum(all_values))
         elif f=='max':
             max(all_values)
         elif f=='min':

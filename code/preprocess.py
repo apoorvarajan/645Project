@@ -10,7 +10,7 @@ from sqlalchemy import create_engine
 # # checking connection
 # print(cursor.fetchone())
 #conn_string = 'postgres://user:password@host/data1'
-conn_string='postgresql://apoorvarajan@localhost/apoorvarajan'
+conn_string='postgresql://femimoljoseph@localhost/SeeDB_Project'
 db = create_engine(conn_string)
 conn = db.connect()
 # conn = psycopg2.connect(conn_string)
