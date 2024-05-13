@@ -6,10 +6,6 @@ from scipy import stats
 import psycopg2
 import pandas as pd
 
-conn_string='postgresql://priyankavirupakshappadevoor@localhost/priyankavirupakshappadevoor'
-conn = psycopg2.connect(conn_string) 
-cursor = conn.cursor() 
-
 measure_attr=['age','fnlwgt', 'education_num','capital_gain','capital_loss','hours_per_week']
 dimension_attr=['workclass','education','occupation','relationship','race','sex','native_country','income']
 aggregates=['sum','avg','max','min','count']
@@ -75,6 +71,9 @@ def get_all_views():
     return views
 
 def execute_query(query):
+    conn_string='postgresql://priyankavirupakshappadevoor@localhost/priyankavirupakshappadevoor'
+    conn = psycopg2.connect(conn_string) 
+    cursor = conn.cursor() 
     cursor.execute(query)
     result= pd.DataFrame(cursor.fetchall())
     target_cols = cursor.description
@@ -123,7 +122,6 @@ def top_5_AggViews(ranking,views):
 
         display_Graph(tgt_dict, ref_dict, (a, m, f))
 
-#need to modify code
 def display_Graph(target_data, ref_data, view_tuple):
     n_groups = len(target_data)
     group_by, measure, function = view_tuple
@@ -137,12 +135,12 @@ def display_Graph(target_data, ref_data, view_tuple):
     bar_width = 0.35
     opacity = 0.8
 
-    rects1 = plt.bar(index, means_target, bar_width,
+    plt.bar(index, means_target, bar_width,
                      alpha=opacity,
                      color='#800080',
                      label='married')
 
-    rects2 = plt.bar(index + bar_width, means_ref, bar_width,
+    plt.bar(index + bar_width, means_ref, bar_width,
                      alpha=opacity,
                      color='#FFB6C1',
                      label='unmarried')
@@ -150,7 +148,7 @@ def display_Graph(target_data, ref_data, view_tuple):
     plt.xlabel('{}'.format(group_by))
     plt.ylabel('{}({})'.format(function, measure))
     plt.xticks(index + bar_width, target_data.keys(), rotation=45)
-    plt.legend()
+    plt.legend(title="Married")
 
     plt.tight_layout()
     plt.show()
