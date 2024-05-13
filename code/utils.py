@@ -37,6 +37,8 @@ def get_prune_query(start_index_target,end_index_target, start_index_ref,end_ind
     reference_query+=aggregate_query_married + ' from RankedRowsum where '
     reference_query += where_married + f' AND row_num BETWEEN {start_index_ref} AND {end_index_ref} GROUP BY ' + ','.join(dimension_attr) + ' ;'
 
+    return target_query, reference_query
+
 def get_confidence_interval(m,N,delta):
     epsilon=math.sqrt((0.5/m)*(1-((m-1)/N))*(2*math.log(math.log(m))+math.log((math.pi**2)/(3*delta))))
     return epsilon
