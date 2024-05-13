@@ -38,6 +38,5 @@ cursor.execute(sql1)
 cursor.execute(sql2)
 cursor.execute(sql3)
 cursor.execute(sql4)
-# for i in cursor.fetchall(): 
-#     print(i) 
+
 conn.close()

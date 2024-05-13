@@ -6,9 +6,9 @@ from scipy import stats
 import psycopg2
 import pandas as pd
 
-# conn_string='postgresql://priyankavirupakshappadevoor@localhost/priyankavirupakshappadevoor'
-# conn = psycopg2.connect(conn_string) 
-# cursor = conn.cursor() 
+conn_string='postgresql://femimoljoseph@localhost/SeeDB_Project'
+conn = psycopg2.connect(conn_string) 
+cursor = conn.cursor() 
 
 measure_attr=['age','fnlwgt', 'education_num','capital_gain','capital_loss','hours_per_week']
 dimension_attr=['workclass','education','occupation','relationship','race','sex','native_country','income']
@@ -99,9 +99,10 @@ def EvaluationViews(views, view_scores, target_df, reference_df):
     return view_scores
 
 def top_5_AggViews(ranking,views):
-    for vid in ranking[:5]:        
-        f, m, a = views[vid]
-
+    print("Top 5 views:",ranking[:5])
+    for viewid in ranking[:5]:
+        f, m, a = views[viewid]
+        print("View {} :{}".format(viewid,views[viewid]))
         query = "SELECT {}, {}({}) FROM married_adults GROUP BY {};".format(a, f, m, a)
         cursor.execute(query)
         tgt_rows = cursor.fetchall()
@@ -110,18 +111,17 @@ def top_5_AggViews(ranking,views):
         cursor.execute(query)
         ref_rows = cursor.fetchall()
 
-        tgt_dict = dict(tgt_rows)
-        ref_dict = dict(ref_rows)
+        t_Dict = dict(tgt_rows)
+        r_Dict = dict(ref_rows)
 
-        for k in tgt_dict.keys():
-            if k not in ref_dict:
-                ref_dict[k] = 0
+        for k in t_Dict.keys():
+            if k not in r_Dict:
+                r_Dict[k] = 0
 
-        for k in ref_dict.keys():
-            if k not in tgt_dict:
-                tgt_dict[k] = 0
-
-        display_Graph(tgt_dict, ref_dict, (a, m, f))
+        for k in r_Dict.keys():
+            if k not in t_Dict:
+                t_Dict[k] = 0
+        display_Graph(t_Dict, r_Dict, (a, m, f))
 
 def display_Graph(target_data, ref_data, view_tuple):
     n_groups = len(target_data)
