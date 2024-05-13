@@ -46,11 +46,12 @@ def get_confidence_interval(m,N,delta):
 def KL_divergence(target, reference):
     #Compute dsitance between probability distributions of target and reference
     target = np.asarray(target, dtype=np.float64)
-    target = target.reshape(-1) 
     reference = np.asarray(reference, dtype=np.float64)
-    reference = reference.reshape(-1)
-    print(target.shape)
-    return np.sum(np.where(target != 0, target * np.log(target / reference), 0))
+    if len(target) > len(reference):
+        target = np.random.choice(target, len(reference))
+    elif len(q) >= len(target):
+        reference = np.random.choice(reference, len(target))
+    return np.sum(target * np.log(target / reference))
 
     
 def get_all_views(measure_attr,dimension_attr,aggregates):

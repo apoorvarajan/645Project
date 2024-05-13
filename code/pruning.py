@@ -40,13 +40,9 @@ for i in range(N):
     reference_cols = cursor.description
     reference_result.columns = [col[0] for col in reference_cols]
 
-    print(target_result)
-    print(reference_result)
-
     # Convert target and reference results to probability distributions
     target_prob = target_result[target_result.columns[-1]].values / np.sum(target_result[target_result.columns[-1]].values)
     reference_prob = reference_result[reference_result.columns[-1]].values / np.sum(reference_result[reference_result.columns[-1]].values)
-    print(target_prob)
 
     utility = utils.KL_divergence(target_prob,reference_prob)
     print(utility)
