@@ -91,12 +91,9 @@ def EvaluationViews(views, view_scores, target_df, reference_df):
         married = target_df.loc[target_df[a].notnull(), [a,vName]]
         unmarried = reference_df.loc[reference_df[a].notnull(), [a, vName]]
         temp = married.join(unmarried.set_index(a), on=a, how="inner", lsuffix='_target', rsuffix='_reference')
-        #print("Temp:",temp)
         TarValues = temp[vName+'_target'.format(i)].values
         RefValues = temp[vName+'_reference'.format(i)].values
-        #print("TarValues:", TarValues)
         UtiltiScore = KL_divergence(TarValues, RefValues)
-        #print("UtiltiScore:", UtiltiScore)
         view_scores[i].append(UtiltiScore)
 
     return view_scores
@@ -109,14 +106,11 @@ def top_5_AggViews(ranking,views):
         query = "SELECT {}, {}({}) FROM married_adults GROUP BY {};".format(a, f, m, a)
         cursor.execute(query)
         tgt_rows = cursor.fetchall()
-
         query = "SELECT {}, {}({}) FROM unmarried_adults GROUP BY {};".format(a, f, m, a)
         cursor.execute(query)
         ref_rows = cursor.fetchall()
-
         t_Dict = dict(tgt_rows)
         r_Dict = dict(ref_rows)
-
         for k in t_Dict.keys():
             if k not in r_Dict:
                 r_Dict[k] = 0
@@ -142,12 +136,12 @@ def display_Graph(target_data, ref_data, view_tuple):
     plt.bar(index, means_target, bar_width,
                      alpha=opacity,
                      color='#800080',
-                     label='married')
+                     label='True')
 
     plt.bar(index + bar_width, means_ref, bar_width,
                      alpha=opacity,
                      color='#FFB6C1',
-                     label='unmarried')
+                     label='False')
 
     plt.xlabel('{}'.format(group_by))
     plt.ylabel('{}({})'.format(function, measure))
